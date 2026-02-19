@@ -40,8 +40,8 @@ jobs:
         uses: docker/metadata-action@v5
         with:
           images: |
-            neosmemo/memos
-            ghcr.io/usememos/memos
+            tpmore/memos
+            ghcr.io/tpmore/memos
           flavor: |
             latest=false
           tags: |
