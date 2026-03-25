@@ -1,34 +1,27 @@
-# ---- Build Stage ----
-FROM golang:1.25-alpine AS builder
-
-RUN apk add --no-cache git nodejs npm
-
-WORKDIR /app
-
-# Backend deps
-COPY go.mod go.sum ./
-RUN go mod download
-
-# Frontend
-COPY web ./web
+# ---- Build frontend ----
+FROM node:20-alpine AS frontend
 WORKDIR /app/web
-RUN npm install
-RUN npm run build
 
-# Backend source
+COPY web/ .
+RUN npm install -g pnpm && pnpm install && pnpm build
+
+# ---- Build backend ----
+FROM golang:1.22-alpine AS backend
 WORKDIR /app
+
 COPY . .
-RUN CGO_ENABLED=0 GOOS=linux go build -o memos ./cmd/memos
+RUN go build -o memos ./cmd/memos
 
-# ---- Runtime Stage ----
-FROM alpine:3.19
-
+# ---- Final image ----
+FROM alpine:latest
 WORKDIR /app
 
-COPY --from=builder /app/memos /app/memos
-COPY --from=builder /app/web/build ./web/build  # frontend build
+# Copy backend
+COPY --from=backend /app/memos /app/memos
 
-EXPOSE 8081
-ENV PORT=8081
+# Copy frontend build
+COPY --from=frontend /app/web/dist /app/web/dist
 
-CMD ["./memos"]
+EXPOSE 5230
+
+CMD ["/app/memos"]

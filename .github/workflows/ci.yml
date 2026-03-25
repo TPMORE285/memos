@@ -25,3 +25,4 @@ jobs:
           file: ./scripts/Dockerfile
           push: true
           tags: tpmore/memos:canary
+clear
